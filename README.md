@@ -18,12 +18,15 @@ This repository provides a Dockerized [self-hosted GitHub Actions runner](https:
 ## TL;DR
 
 ```bash
+REPO_URL=<https://github.com/username/repo>
+REPO_NAME=$(basename -s .git "$REPO_URL")
 docker run -d \
-  --name github-runner \
-  -e REPO_URL=<https://github.com/username/repo> \
-  -e TOKEN=<token> \
+  --name "actions-runner-$REPO_NAME" \
+  -e REPO_URL="$REPO_URL" \
+  -e TOKEN="<token>" \
   torshin5ergey/actions-runner:latest
 ```
+
 Replace <https://github.com/username/repo> with your repository URL and <your-token> with a valid GitHub token.
 
 ## Build
@@ -31,7 +34,7 @@ Replace <https://github.com/username/repo> with your repository URL and <your-to
 To build the Docker image locally, navigate to the repository directory and run
 
 ```bash
-docker build -t actions-runner:2.322.0 .
+docker build -t actions-runner .
 ```
 
 ## Setup and Run
@@ -41,10 +44,13 @@ docker build -t actions-runner:2.322.0 .
 To run GitHub Actions Runner in Docker, you need to provide your repository URL and a token for authentication. Replace `<https://github.com/username/repo>` and `<token>` with your data.
 
 ```bash
+REPO_URL=<https://github.com/username/repo>
+REPO_NAME=$(basename -s .git "$REPO_URL")
+
 docker run -d \
-  --name github-runner \
-  -e REPO_URL=<https://github.com/username/repo> \
-  -e TOKEN=<token> \
+  --name "actions-runner-$REPO_NAME" \
+  -e REPO_URL="$REPO_URL" \
+  -e TOKEN="<token>" \
   torshin5ergey/actions-runner:latest
 ```
 
