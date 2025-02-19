@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/runtime-deps:8.0-jammy
+FROM ubuntu:jammy
 
 LABEL author="Sergey Torshin @torshin5ergey" \
     description="Custom GitHub Actions runner for Docker" \
@@ -17,7 +17,7 @@ ENV REPO_URL=${REPO_URL}
 
 # Install prerequisites
 RUN apt update && \
-    apt install -y git && \
+    apt install -y --no-install-recommends ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 # Download runner package
@@ -31,6 +31,9 @@ RUN if [ "${CHECK_HASH}" = "true" ]; then \
 # Extract the installer
 RUN tar xzf ./actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz && \
     rm ./actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz
+
+# Install Dotnet Core 6.0 dependencies
+RUN ./bin/installdependencies.sh
 
 # Create runner user
 RUN useradd -m runner && chown -R runner:runner /actions-runner
