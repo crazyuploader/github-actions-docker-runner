@@ -17,7 +17,7 @@ ENV REPO_URL=${REPO_URL}
 
 # Install prerequisites
 RUN apt update && \
-    apt install -y --no-install-recommends git && \
+    apt install -y git && \
     rm -rf /var/lib/apt/lists/*
 
 # Download runner package
