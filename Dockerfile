@@ -39,5 +39,6 @@ RUN ./bin/installdependencies.sh
 RUN useradd -m runner && chown -R runner:runner /actions-runner
 USER runner
 
-# Run it!
-CMD ["sh", "-c", "./config.sh --url ${REPO_URL} --token ${TOKEN} && ./run.sh"]
+# Entrypoint script
+COPY --chown=runner:runner entrypoint.sh ./
+ENTRYPOINT ["./entrypoint.sh"]
