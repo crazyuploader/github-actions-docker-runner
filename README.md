@@ -27,7 +27,7 @@ docker run -d \
   torshin5ergey/actions-runner:latest
 ```
 
-Replace <https://github.com/username/repo> with your repository URL and <your-token> with a valid GitHub token.
+Replace `<https://github.com/username/repo>` with your repository URL and `<token>` with a valid GitHub token.
 
 ## Build
 
