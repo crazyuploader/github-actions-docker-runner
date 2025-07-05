@@ -1,0 +1,11 @@
+services:
+  actions-runner:
+    container_name: actions-runner-<REPO_NAME> # Replace <REPO_NAME> with your repository name for clarity
+    environment:
+      - REPO_URL=<REPO_URL>
+      - TOKEN=<ACTIONS_RUNNER_TOKEN>
+    restart: always
+    logging:
+      options:
+        max-size: 1g
+    image: ghcr.io/crazyuploader/actions-runner:latest
