@@ -56,7 +56,7 @@ docker run -d \
 
 ### Step 2: Use the runner
 
- Use this YAML in your workflow file for each job
+Use this YAML in your workflow file for each job
 
 ```yaml
 runs-on: self-hosted
@@ -71,10 +71,10 @@ The following environment variables can be configured.
 | Name             | Description                                                                                                                           | Default value                                                   |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
 | `REPO_URL`       | The URL of the GitHub repository where the runner will be registered.                                                                 | -                                                               |
-| `TOKEN`          | A GitHub token with permissions to register the runner. *Can be found on Repo Settings > Actions > Runners > New self-hosted runner.* | -                                                               |
+| `TOKEN`          | A GitHub token with permissions to register the runner. _Can be found on Repo Settings > Actions > Runners > New self-hosted runner._ | -                                                               |
 | `RUNNER_VERSION` | The version of the GitHub Actions runner to download.                                                                                 | `2.322.0`                                                       |
 | `CHECK_HASH`     | Set to `true` to enable hash validation (requires specifying corresponding `RUNNER_HASH` hash value).                                 | `true`                                                          |
-| `RUNNER_HASH`    | The SHA256 hash for the specified runner version for validation. Only used if the `CHECK_HASH` is `true`                              | `b13b7848...` *the entire value can be found in the Dockerfile* |
+| `RUNNER_HASH`    | The SHA256 hash for the specified runner version for validation. Only used if the `CHECK_HASH` is `true`                              | `b13b7848...` _the entire value can be found in the Dockerfile_ |
 
 ## License
 
