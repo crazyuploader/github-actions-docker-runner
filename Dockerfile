@@ -8,7 +8,7 @@ LABEL author="Sergey Torshin @torshin5ergey" \
     description="Custom GitHub Actions runner for Docker" \
     runner-image="Linux" \
     runner-architecture=${TARGETARCH} \
-    runner-default-version="2.327.1"
+    runner-default-version="2.326.0"
 
 ARG RUNNER_VERSION=2.326.0
 ARG RUNNER_HASH_AMD64=9c74af9b4352bbc99aecc7353b47bcdfcd1b2a0f6d15af54a99f54a0c14a1de8
