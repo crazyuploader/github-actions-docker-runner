@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_TAG: 2.326.0
+  IMAGE_TAG: 2.327.1
   IMAGE_NAME: crazyuploader/actions-runner
 
 jobs:
