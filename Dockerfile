@@ -32,7 +32,7 @@ RUN apt-get update && \
                     mtr-tiny dnsutils iputils-ping traceroute \
                     python3 python-is-python3 locales-all \
                     gpg openssh-client xz-utils ca-certificates \
-                    tmux screen jq tree bc build-essential
+                    tmux screen jq tree bc build-essential clang
 
 # Clean up
 RUN apt-get clean && \
