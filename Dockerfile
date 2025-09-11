@@ -8,12 +8,12 @@ LABEL author="Sergey Torshin @torshin5ergey" \
     description="Custom GitHub Actions runner for Docker" \
     runner-image="Linux" \
     runner-architecture=${TARGETARCH} \
-    runner-default-version="2.327.1"
+    runner-default-version="2.328.0"
 
-ARG RUNNER_VERSION=2.327.1
-ARG RUNNER_HASH_AMD64=d68ac1f500b747d1271d9e52661c408d56cffd226974f68b7dc813e30b9e0575
-ARG RUNNER_HASH_ARM64=16102096988246f250a745c6a813a5a0b8901e2f554f9440c97e8573fd4da111
-ARG RUNNER_HASH_ARM=b6f34af6d11f5f023fe23aa8bcb01f392eaad30d70e1e31f4e68bbdbb315eda8
+ARG RUNNER_VERSION=2.328.0
+ARG RUNNER_HASH_AMD64=01066fad3a2893e63e6ca880ae3a1fad5bf9329d60e77ee15f2b97c148c3cd4e
+ARG RUNNER_HASH_ARM64=b801b9809c4d9301932bccadf57ca13533073b2aa9fa9b8e625a8db905b5d8eb
+ARG RUNNER_HASH_ARM=530bb83124f38edc9b410fbcc0a8b0baeaa336a14e3707acc8ca308fe0cb7540
 ARG CHECK_HASH=true
 
 WORKDIR /actions-runner
