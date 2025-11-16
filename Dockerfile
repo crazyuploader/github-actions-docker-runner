@@ -4,16 +4,16 @@ FROM ubuntu:noble
 ARG TARGETARCH
 ENV TARGETARCH=${TARGETARCH}
 
-LABEL author="Sergey Torshin @torshin5ergey" \
+LABEL author="@crazyuploader" \
     description="Custom GitHub Actions runner for Docker" \
     runner-image="Linux" \
     runner-architecture=${TARGETARCH} \
-    runner-default-version="2.328.0"
+    runner-default-version="2.329.0"
 
-ARG RUNNER_VERSION=2.328.0
-ARG RUNNER_HASH_AMD64=01066fad3a2893e63e6ca880ae3a1fad5bf9329d60e77ee15f2b97c148c3cd4e
-ARG RUNNER_HASH_ARM64=b801b9809c4d9301932bccadf57ca13533073b2aa9fa9b8e625a8db905b5d8eb
-ARG RUNNER_HASH_ARM=530bb83124f38edc9b410fbcc0a8b0baeaa336a14e3707acc8ca308fe0cb7540
+ARG RUNNER_VERSION=2.329.0
+ARG RUNNER_HASH_AMD64=194f1e1e4bd02f80b7e9633fc546084d8d4e19f3928a324d512ea53430102e1d
+ARG RUNNER_HASH_ARM64=56768348b3d643a6a29d4ad71e9bdae0dc0ef1eb01afe0f7a8ee097b039bfaaf
+ARG RUNNER_HASH_ARM=b958284b8af869bd6d3542210fbd23702449182ba1c2b1b1eef575913434f13a
 ARG CHECK_HASH=true
 
 WORKDIR /actions-runner
