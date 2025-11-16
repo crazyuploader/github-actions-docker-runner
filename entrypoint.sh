@@ -1,9 +1,8 @@
 #! /bin/bash
 
-# Check if runner is already configured
-
 set -e
 
+# Check if runner is already configured
 # Configure thr runner on first start
 if [ ! -f .runner ]; then
     ./config.sh --url "${REPO_URL}" --token "${TOKEN}"

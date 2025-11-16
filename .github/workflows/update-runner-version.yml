@@ -15,34 +15,69 @@ jobs:
       - name: Get latest runner version
         id: get_version
         run: |
-          LATEST_VERSION=$(curl -s "https://api.github.com/repos/actions/runner/releases/latest" | jq -r '.tag_name' | sed 's/v//')
+          set -e
+          LATEST_VERSION=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/actions/runner/releases/latest" | jq -r '.tag_name' | sed 's/v//')
+          if [ -z "$LATEST_VERSION" ] || [ "$LATEST_VERSION" == "null" ]; then
+            echo "Failed to fetch latest runner version"
+            exit 1
+          fi
           echo "latest_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Update files
+      - name: Get current runner version
+        id: get_current_version
         run: |
+          set -e
+          CURRENT_VERSION=$(grep "^ARG RUNNER_VERSION=" Dockerfile | sed 's/ARG RUNNER_VERSION=//g')
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update files
+        if: steps.get_version.outputs.latest_version != steps.get_current_version.outputs.current_version
+        run: |
+          set -e
           # Get the checksums file
-          wget -q "https://github.com/actions/runner/releases/download/v${{ steps.get_version.outputs.latest_version }}/actions-runner-linux-x64-${{ steps.get_version.outputs.latest_version }}.tar.gz.sha256sum" -O checksums_amd64.txt
-          wget -q "https://github.com/actions/runner/releases/download/v${{ steps.get_version.outputs.latest_version }}/actions-runner-linux-arm64-${{ steps.get_version.outputs.latest_version }}.tar.gz.sha256sum" -O checksums_arm64.txt
-          wget -q "https://github.com/actions/runner/releases/download/v${{ steps.get_version.outputs.latest_version }}/actions-runner-linux-arm-${{ steps.get_version.outputs.latest_version }}.tar.gz.sha256sum" -O checksums_arm.txt
+          for arch in x64 arm64 arm; do
+            wget -q "https://github.com/actions/runner/releases/download/v${{ steps.get_version.outputs.latest_version }}/actions-runner-linux-${arch}-${{ steps.get_version.outputs.latest_version }}.tar.gz.sha256sum" -O "checksums_${arch}.txt" || {
+              echo "Failed to download checksum for ${arch}"
+              exit 1
+            }
+          done
 
           # Extract the checksums
-          RUNNER_HASH_AMD64=$(cat checksums_amd64.txt | awk '{print $1}')
+          RUNNER_HASH_AMD64=$(cat checksums_x64.txt | awk '{print $1}')
           RUNNER_HASH_ARM64=$(cat checksums_arm64.txt | awk '{print $1}')
           RUNNER_HASH_ARM=$(cat checksums_arm.txt | awk '{print $1}')
 
+          # Validate checksums are valid hex strings (64 characters for SHA256)
+          for hash in RUNNER_HASH_AMD64 RUNNER_HASH_ARM64 RUNNER_HASH_ARM; do
+            if ! [[ ${!hash} =~ ^[a-f0-9]{64}$ ]]; then
+              echo "Invalid checksum for ${hash}: ${!hash}"
+              exit 1
+            fi
+          done
+
           # Update Dockerfile
+          if [ ! -f Dockerfile ]; then
+            echo "Dockerfile not found"
+            exit 1
+          fi
           sed -i "s/^\(ARG RUNNER_VERSION=\).*/\1${{ steps.get_version.outputs.latest_version }}/" Dockerfile
           sed -i "s/^\(ARG RUNNER_HASH_AMD64=\).*/\1${RUNNER_HASH_AMD64}/" Dockerfile
           sed -i "s/^\(ARG RUNNER_HASH_ARM64=\).*/\1${RUNNER_HASH_ARM64}/" Dockerfile
           sed -i "s/^\(ARG RUNNER_HASH_ARM=\).*/\1${RUNNER_HASH_ARM}/" Dockerfile
 
           # Update workflow file
+          if [ ! -f .github/workflows/docker-publish.yml ]; then
+            echo ".github/workflows/docker-publish.yml not found"
+            exit 1
+          fi
           sed -i "s/^\(  IMAGE_TAG: \).*/\1${{ steps.get_version.outputs.latest_version }}/" .github/workflows/docker-publish.yml
 
       - name: Check for changes
         id: check_changes
         run: |
-          if git diff --quiet; then
+          set -e
+          git add -A
+          if git diff --quiet --cached; then
             echo "changes=false" >> $GITHUB_OUTPUT
           else
             echo "changes=true" >> $GITHUB_OUTPUT
@@ -53,8 +88,16 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           commit-message: "Update runner version to ${{ steps.get_version.outputs.latest_version }}"
           title: "Update runner version to ${{ steps.get_version.outputs.latest_version }}"
           body: "This PR updates the runner version to ${{ steps.get_version.outputs.latest_version }} and the corresponding checksums."
           branch: "update-runner-version-${{ steps.get_version.outputs.latest_version }}"
           delete-branch: true
+          
+      - name: Cleanup on failure
+        if: failure()
+        run: |
+          set -e
+          git push origin --delete "update-runner-version-${{ steps.get_version.outputs.latest_version }}" || true

@@ -60,7 +60,7 @@ RUN case "${TARGETARCH}" in \
             exit 1; \
             ;; \
     esac; \
-    wget -q -O "${RUNNER_FILENAME}" "${RUNNER_URL}" && \
+    curl -fsSL -o "${RUNNER_FILENAME}" "${RUNNER_URL}" && \
     if [ "${CHECK_HASH}" = "true" ]; then \
         echo "${RUNNER_HASH} ${RUNNER_FILENAME}" | sha256sum -c; \
     fi && \
