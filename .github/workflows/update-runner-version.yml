@@ -1,0 +1,60 @@
+name: Update Runner Version
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # Runs every day at midnight
+  workflow_dispatch:
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Get latest runner version
+        id: get_version
+        run: |
+          LATEST_VERSION=$(curl -s "https://api.github.com/repos/actions/runner/releases/latest" | jq -r '.tag_name' | sed 's/v//')
+          echo "latest_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update files
+        run: |
+          # Get the checksums file
+          wget -q "https://github.com/actions/runner/releases/download/v${{ steps.get_version.outputs.latest_version }}/actions-runner-linux-x64-${{ steps.get_version.outputs.latest_version }}.tar.gz.sha256sum" -O checksums_amd64.txt
+          wget -q "https://github.com/actions/runner/releases/download/v${{ steps.get_version.outputs.latest_version }}/actions-runner-linux-arm64-${{ steps.get_version.outputs.latest_version }}.tar.gz.sha256sum" -O checksums_arm64.txt
+          wget -q "https://github.com/actions/runner/releases/download/v${{ steps.get_version.outputs.latest_version }}/actions-runner-linux-arm-${{ steps.get_version.outputs.latest_version }}.tar.gz.sha256sum" -O checksums_arm.txt
+
+          # Extract the checksums
+          RUNNER_HASH_AMD64=$(cat checksums_amd64.txt | awk '{print $1}')
+          RUNNER_HASH_ARM64=$(cat checksums_arm64.txt | awk '{print $1}')
+          RUNNER_HASH_ARM=$(cat checksums_arm.txt | awk '{print $1}')
+
+          # Update Dockerfile
+          sed -i "s/^\(ARG RUNNER_VERSION=\).*/\1${{ steps.get_version.outputs.latest_version }}/" Dockerfile
+          sed -i "s/^\(ARG RUNNER_HASH_AMD64=\).*/\1${RUNNER_HASH_AMD64}/" Dockerfile
+          sed -i "s/^\(ARG RUNNER_HASH_ARM64=\).*/\1${RUNNER_HASH_ARM64}/" Dockerfile
+          sed -i "s/^\(ARG RUNNER_HASH_ARM=\).*/\1${RUNNER_HASH_ARM}/" Dockerfile
+
+          # Update workflow file
+          sed -i "s/^\(  IMAGE_TAG: \).*/\1${{ steps.get_version.outputs.latest_version }}/" .github/workflows/docker-publish.yml
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet; then
+            echo "changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.check_changes.outputs.changes == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Update runner version to ${{ steps.get_version.outputs.latest_version }}"
+          title: "Update runner version to ${{ steps.get_version.outputs.latest_version }}"
+          body: "This PR updates the runner version to ${{ steps.get_version.outputs.latest_version }} and the corresponding checksums."
+          branch: "update-runner-version-${{ steps.get_version.outputs.latest_version }}"
+          delete-branch: true
