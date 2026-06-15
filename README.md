@@ -16,6 +16,7 @@ Dockerized self-hosted GitHub Actions runner. Supports `linux/amd64` and `linux/
 services:
   actions-runner:
     container_name: actions-runner-<NAME>
+    hostname: actions-runner-<NAME> # Becomes the runner name shown in GitHub
     image: ghcr.io/crazyuploader/actions-runner:latest
     restart: unless-stopped
     environment:

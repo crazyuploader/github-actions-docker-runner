@@ -23,7 +23,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get -y autoremove --purge && \
     apt-get install -y --no-install-recommends \
-                    git curl wget zip unzip nano tar \
+                    git curl wget zip unzip nano tar gosu \
                     mtr-tiny dnsutils iputils-ping traceroute \
                     python3 python-is-python3 locales-all \
                     gpg openssh-client xz-utils ca-certificates \
@@ -62,8 +62,8 @@ RUN ./bin/installdependencies.sh
 
 # Create runner user
 RUN useradd -m runner && chown -R runner:runner /actions-runner
-USER runner
 
-# Entrypoint script
+# Entrypoint runs as root to fix bind-mount ownership, then drops to the
+# runner user via gosu. The runner itself never runs as root.
 COPY --chown=runner:runner entrypoint.sh ./
 ENTRYPOINT ["./entrypoint.sh"]
