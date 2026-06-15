@@ -20,7 +20,7 @@ services:
     restart: unless-stopped
     environment:
       - RUNNER_URL=<RUNNER_URL> # repo: https://github.com/ORG/REPO
-                                # org:  https://github.com/ORG
+        # org:  https://github.com/ORG
       - TOKEN=<ACTIONS_RUNNER_TOKEN>
     volumes:
       - ./runner-config:/runner-config

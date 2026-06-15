@@ -10,7 +10,6 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: crazyuploader/actions-runner
-  IMAGE_TAG: 2.333.0
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -100,6 +99,13 @@ jobs:
     if: github.event_name != 'pull_request'
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Get runner version
+        id: version
+        run: echo "tag=$(grep '^ARG RUNNER_VERSION=' Dockerfile | cut -d= -f2)" >> $GITHUB_OUTPUT
+
       - name: Download digests
         uses: actions/download-artifact@v8
         with:
@@ -121,7 +127,7 @@ jobs:
         working-directory: ${{ runner.temp }}/digests
         run: |
           docker buildx imagetools create \
-            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }} \
             -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
 
