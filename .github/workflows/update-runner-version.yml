@@ -10,18 +10,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Get latest runner version
         id: get_version
         run: |
           set -e
-          LATEST_VERSION=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/actions/runner/releases/latest" | jq -r '.tag_name' | sed 's/v//')
+          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/actions/runner/releases/latest")
+          LATEST_VERSION=$(echo "$RESPONSE" | jq -r '.tag_name' | sed 's/v//')
           if [ -z "$LATEST_VERSION" ] || [ "$LATEST_VERSION" == "null" ]; then
             echo "Failed to fetch latest runner version"
             exit 1
           fi
+          RELEASE_BODY=$(echo "$RESPONSE" | jq -r '.body')
+          HASH_AMD64=$(echo "$RELEASE_BODY" | grep -oP '(?<=BEGIN SHA linux-x64 -->)[a-f0-9]{64}')
+          HASH_ARM64=$(echo "$RELEASE_BODY" | grep -oP '(?<=BEGIN SHA linux-arm64 -->)[a-f0-9]{64}')
           echo "latest_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+          echo "hash_amd64=$HASH_AMD64" >> $GITHUB_OUTPUT
+          echo "hash_arm64=$HASH_ARM64" >> $GITHUB_OUTPUT
 
       - name: Get current runner version
         id: get_current_version
@@ -32,45 +38,29 @@ jobs:
 
       - name: Update files
         if: steps.get_version.outputs.latest_version != steps.get_current_version.outputs.current_version
+        env:
+          VERSION: ${{ steps.get_version.outputs.latest_version }}
+          HASH_AMD64: ${{ steps.get_version.outputs.hash_amd64 }}
+          HASH_ARM64: ${{ steps.get_version.outputs.hash_arm64 }}
         run: |
           set -e
-          # Get the checksums file
-          for arch in x64 arm64 arm; do
-            wget -q "https://github.com/actions/runner/releases/download/v${{ steps.get_version.outputs.latest_version }}/actions-runner-linux-${arch}-${{ steps.get_version.outputs.latest_version }}.tar.gz.sha256sum" -O "checksums_${arch}.txt" || {
-              echo "Failed to download checksum for ${arch}"
-              exit 1
-            }
-          done
 
-          # Extract the checksums
-          RUNNER_HASH_AMD64=$(cat checksums_x64.txt | awk '{print $1}')
-          RUNNER_HASH_ARM64=$(cat checksums_arm64.txt | awk '{print $1}')
-          RUNNER_HASH_ARM=$(cat checksums_arm.txt | awk '{print $1}')
-
-          # Validate checksums are valid hex strings (64 characters for SHA256)
-          for hash in RUNNER_HASH_AMD64 RUNNER_HASH_ARM64 RUNNER_HASH_ARM; do
-            if ! [[ ${!hash} =~ ^[a-f0-9]{64}$ ]]; then
-              echo "Invalid checksum for ${hash}: ${!hash}"
+          # Validate checksums
+          for var in HASH_AMD64 HASH_ARM64; do
+            if ! [[ ${!var} =~ ^[a-f0-9]{64}$ ]]; then
+              echo "Invalid checksum for ${var}: ${!var}"
               exit 1
             fi
           done
 
           # Update Dockerfile
-          if [ ! -f Dockerfile ]; then
-            echo "Dockerfile not found"
-            exit 1
-          fi
-          sed -i "s/^\(ARG RUNNER_VERSION=\).*/\1${{ steps.get_version.outputs.latest_version }}/" Dockerfile
-          sed -i "s/^\(ARG RUNNER_HASH_AMD64=\).*/\1${RUNNER_HASH_AMD64}/" Dockerfile
-          sed -i "s/^\(ARG RUNNER_HASH_ARM64=\).*/\1${RUNNER_HASH_ARM64}/" Dockerfile
-          sed -i "s/^\(ARG RUNNER_HASH_ARM=\).*/\1${RUNNER_HASH_ARM}/" Dockerfile
+          sed -i "s/^\(ARG RUNNER_VERSION=\).*/\1${VERSION}/" Dockerfile
+          sed -i "s/^\(ARG RUNNER_HASH_AMD64=\).*/\1${HASH_AMD64}/" Dockerfile
+          sed -i "s/^\(ARG RUNNER_HASH_ARM64=\).*/\1${HASH_ARM64}/" Dockerfile
+          sed -i "s/^\(LABEL.*runner-default-version=\)\".*/\1\"${VERSION}\"/" Dockerfile
 
           # Update workflow file
-          if [ ! -f .github/workflows/docker-publish.yml ]; then
-            echo ".github/workflows/docker-publish.yml not found"
-            exit 1
-          fi
-          sed -i "s/^\(  IMAGE_TAG: \).*/\1${{ steps.get_version.outputs.latest_version }}/" .github/workflows/docker-publish.yml
+          sed -i "s/^\(  IMAGE_TAG: \).*/\1${VERSION}/" .github/workflows/docker-publish.yml
 
       - name: Check for changes
         id: check_changes
@@ -95,9 +85,8 @@ jobs:
           body: "This PR updates the runner version to ${{ steps.get_version.outputs.latest_version }} and the corresponding checksums."
           branch: "update-runner-version-${{ steps.get_version.outputs.latest_version }}"
           delete-branch: true
-          
+
       - name: Cleanup on failure
         if: failure()
         run: |
-          set -e
           git push origin --delete "update-runner-version-${{ steps.get_version.outputs.latest_version }}" || true

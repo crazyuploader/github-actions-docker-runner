@@ -2,12 +2,15 @@
 
 set -e
 
-# Check if runner is already configured
-# Configure thr runner on first start
-if [ ! -f .runner ]; then
-    ./config.sh --url "${REPO_URL}" --token "${TOKEN}"
-    touch .runner
+CONFIG_DIR="${RUNNER_CONFIG_DIR:-/runner-config}"
+CONFIG_FILES=(.runner .credentials .credentials_rsaparams)
+
+if [ ! -f "${CONFIG_DIR}/.runner" ]; then
+    ./config.sh --url "${RUNNER_URL}" --token "${TOKEN}"
+    mkdir -p "${CONFIG_DIR}"
+    cp "${CONFIG_FILES[@]}" "${CONFIG_DIR}/"
+else
+    cp "${CONFIG_FILES[@]/#/${CONFIG_DIR}/}" .
 fi
 
-# Start the runner
 exec ./run.sh

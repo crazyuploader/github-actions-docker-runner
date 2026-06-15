@@ -20,15 +20,11 @@ WORKDIR /actions-runner
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-ARG REPO_URL
-ENV REPO_URL=${REPO_URL}
-
-
 # Update packages list and install common dependencies
 RUN apt-get update && \
     apt-get -y autoremove --purge && \
     apt-get install -y --no-install-recommends \
-                    git curl wget zip unzip nano tar zip unzip \
+                    git curl wget zip unzip nano tar \
                     mtr-tiny dnsutils iputils-ping traceroute \
                     python3 python-is-python3 locales-all \
                     gpg openssh-client xz-utils ca-certificates \
@@ -42,17 +38,17 @@ RUN apt-get clean && \
 RUN case "${TARGETARCH}" in \
         "amd64") \
             RUNNER_FILENAME="actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"; \
-            RUNNER_URL="https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/${RUNNER_FILENAME}"; \
+            DOWNLOAD_URL="https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/${RUNNER_FILENAME}"; \
             RUNNER_HASH="${RUNNER_HASH_AMD64}"; \
             ;; \
         "arm64") \
             RUNNER_FILENAME="actions-runner-linux-arm64-${RUNNER_VERSION}.tar.gz"; \
-            RUNNER_URL="https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/${RUNNER_FILENAME}"; \
+            DOWNLOAD_URL="https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/${RUNNER_FILENAME}"; \
             RUNNER_HASH="${RUNNER_HASH_ARM64}"; \
             ;; \
         "arm") \
             RUNNER_FILENAME="actions-runner-linux-arm-${RUNNER_VERSION}.tar.gz"; \
-            RUNNER_URL="https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/${RUNNER_FILENAME}"; \
+            DOWNLOAD_URL="https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/${RUNNER_FILENAME}"; \
             RUNNER_HASH="${RUNNER_HASH_ARM}"; \
             ;; \
         *) \
@@ -60,7 +56,7 @@ RUN case "${TARGETARCH}" in \
             exit 1; \
             ;; \
     esac; \
-    curl -fsSL -o "${RUNNER_FILENAME}" "${RUNNER_URL}" && \
+    curl -fsSL -o "${RUNNER_FILENAME}" "${DOWNLOAD_URL}" && \
     if [ "${CHECK_HASH}" = "true" ]; then \
         echo "${RUNNER_HASH} ${RUNNER_FILENAME}" | sha256sum -c; \
     fi && \

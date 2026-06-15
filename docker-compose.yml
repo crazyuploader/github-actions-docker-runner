@@ -1,11 +1,21 @@
 services:
   actions-runner:
     container_name: actions-runner-<REPO_NAME> # Replace <REPO_NAME> with your repository name for clarity
+    image: ghcr.io/crazyuploader/actions-runner:latest
+    restart: unless-stopped
     environment:
-      - REPO_URL=<REPO_URL>
+      - RUNNER_URL=<RUNNER_URL>
       - TOKEN=<ACTIONS_RUNNER_TOKEN>
-    restart: always
+    volumes:
+      - ./runner-config:/runner-config
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "2.0"
+    #       memory: 4g
+    #     reservations:
+    #       cpus: "0.5"
+    #       memory: 512m
     logging:
       options:
-        max-size: 1g
-    image: ghcr.io/crazyuploader/actions-runner:latest
+        max-size: 64m
