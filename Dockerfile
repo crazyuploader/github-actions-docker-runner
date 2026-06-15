@@ -8,12 +8,11 @@ LABEL author="@crazyuploader" \
     description="Custom GitHub Actions runner for Docker" \
     runner-image="Linux" \
     runner-architecture=${TARGETARCH} \
-    runner-default-version="2.333.0"
+    runner-default-version="2.335.1"
 
-ARG RUNNER_VERSION=2.333.0
-ARG RUNNER_HASH_AMD64=7ce6b3fd8f879797fcc252c2918a23e14a233413dc6e6ab8e0ba8768b5d54475
-ARG RUNNER_HASH_ARM64=b5697062a13f63b44f869de9369638a7039677b9e0f87e47a6001a758c0d09bf
-ARG RUNNER_HASH_ARM=370383a927b3fb61f5b892e0f87eda277b6826eec3dbd17d320f8a472560cec8
+ARG RUNNER_VERSION=2.335.1
+ARG RUNNER_HASH_AMD64=4ef2f25285f0ae4477f1fe1e346db76d2f3ebf03824e2ddd1973a2819bf6c8cf
+ARG RUNNER_HASH_ARM64=6d1e85bfd1a506a8b17c1f1b9b57dba458ffed90898799aaa9f599520b0d9207
 ARG CHECK_HASH=true
 
 WORKDIR /actions-runner
@@ -45,11 +44,6 @@ RUN case "${TARGETARCH}" in \
             RUNNER_FILENAME="actions-runner-linux-arm64-${RUNNER_VERSION}.tar.gz"; \
             DOWNLOAD_URL="https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/${RUNNER_FILENAME}"; \
             RUNNER_HASH="${RUNNER_HASH_ARM64}"; \
-            ;; \
-        "arm") \
-            RUNNER_FILENAME="actions-runner-linux-arm-${RUNNER_VERSION}.tar.gz"; \
-            DOWNLOAD_URL="https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/${RUNNER_FILENAME}"; \
-            RUNNER_HASH="${RUNNER_HASH_ARM}"; \
             ;; \
         *) \
             echo "Unsupported architecture: ${TARGETARCH}"; \
