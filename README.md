@@ -19,14 +19,22 @@ services:
     image: ghcr.io/crazyuploader/actions-runner:latest
     restart: unless-stopped
     environment:
-      - RUNNER_URL=<URL> # repo: https://github.com/ORG/REPO
-        # org:  https://github.com/ORG
-      - TOKEN=<TOKEN> # one-time registration token from step 1
+      - RUNNER_URL=<RUNNER_URL> # repo: https://github.com/ORG/REPO
+                                # org:  https://github.com/ORG
+      - TOKEN=<ACTIONS_RUNNER_TOKEN>
     volumes:
       - ./runner-config:/runner-config
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "2.0"
+    #       memory: 4g
+    #     reservations:
+    #       cpus: "0.5"
+    #       memory: 512m
     logging:
       options:
-        max-size: 1g
+        max-size: 64m
 ```
 
 ### 3. Start

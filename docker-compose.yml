@@ -1,6 +1,6 @@
 services:
   actions-runner:
-    container_name: actions-runner-<REPO_NAME> # Replace <REPO_NAME> with your repository name for clarity
+    container_name: actions-runner-<NAME>
     image: ghcr.io/crazyuploader/actions-runner:latest
     restart: unless-stopped
     environment:
